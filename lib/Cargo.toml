@@ -3,12 +3,11 @@ name = "raydium-contract-instructions"
 version = "0.1.0"
 edition = "2021"
 
-
 [dependencies]
-solana-program = "=1.16.25"
-spl-token = { version = "3.5.0", features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "1.1.2", features = [
+solana-program = "=1.18.23"
+spl-token = { version = "3.4.0", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "1.1.0", features = [
     "no-entrypoint",
 ] }
 thiserror = "1.0.20"
-ahash = "=0.8.6"
+ahash = "=0.8.11"
