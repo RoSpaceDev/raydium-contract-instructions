@@ -167,7 +167,7 @@ describe("amm-proxy", () => {
 
     console.log("-----9-----");
 
-    const accounts = {
+    const initAccounts = {
       ammProgram: globalInfo.ammProgram,
       amm: ammId,
       ammAuthority: ammAuthority,
@@ -187,10 +187,10 @@ describe("amm-proxy", () => {
       userTokenLp: userLPTokenAccount,
     };
 
-    console.log(accounts);
+    console.log(initAccounts);
 
     const openTime = getFutureUnixTimestamp(1);
-    console.log("OWNER", owner.publicKey.toBase58(), "OT", openTime);
+
     let tx = await program.methods
       .proxyInitialize(
         nonce,
@@ -198,7 +198,7 @@ describe("amm-proxy", () => {
         new anchor.BN(100 * 10 ** 9), // set as you want
         new anchor.BN(200 * 10 ** 9) // set as you want
       )
-      .accounts(accounts)
+      .accounts(initAccounts)
       .signers([owner]) //Rocko
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 2400000 }),
@@ -231,7 +231,7 @@ describe("amm-proxy", () => {
         userTokenLp: userLPTokenAccount,
         userOwner: owner.publicKey,
       })
-      .rpc();
+      .rpc({ preflightCommitment: "confirmed" });
     console.log("deposit tx: ", tx);
 
     /************************************ withdraw test ***********************************************************************/
@@ -263,7 +263,7 @@ describe("amm-proxy", () => {
         marketBids: market.bids,
         marketAsks: market.asks,
       })
-      .rpc();
+      .rpc({ preflightCommitment: "confirmed" });
 
     console.log("withdraw tx: ", tx);
 
@@ -293,7 +293,7 @@ describe("amm-proxy", () => {
         userTokenDestination: userPcTokenAccount,
         userSourceOwner: owner.publicKey,
       })
-      .rpc();
+      .rpc({ preflightCommitment: "confirmed" });
     console.log("swap_base_in tx: ", tx);
 
     /************************************ swapBaseOut test ***********************************************************************/
@@ -323,7 +323,7 @@ describe("amm-proxy", () => {
         userTokenDestination: userPcTokenAccount,
         userSourceOwner: owner.publicKey,
       })
-      .rpc();
+      .rpc({ preflightCommitment: "confirmed" });
     console.log("swap_base_out tx: ", tx);
   });
 });
