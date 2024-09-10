@@ -24,14 +24,33 @@ import {
 
 import { AmmProxy } from "../target/types/amm_proxy";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
+
+// //4jqQQ61Pkxh7f2Gma4Kqf66iNzxcMCxkx7hPK4tepqF8
+// const market = Keypair.fromSecretKey(
+//   bs58.decode(
+//     "3WawKsMtXLTDoreSgo7uNjVvX2NfrCA66pHN6tPuxfzUiLEzHhX6aPWLHCZcatvzPhkXJX5HVyKYJp4CiyD2HJFU"
+//   )
+// );
+
+const market = new Keypair();
+
+// const globalInfo = {
+//   marketProgram: new PublicKey("EoTcMgcDRTJVZDMZWBoU6rhYHZfkNTVEAfz3uUJRcYGj"),
+//   ammProgram: new PublicKey("HWy1jotHpo6UqeQxx49dpYYdQB8wj9Qk9MdxwjLvDHB8"),
+//   ammCreateFeeDestination: new PublicKey(
+//     "3XMrhbv989VxAMi3DErLV9eJht1pHppW5LbKxe9fkEFR"
+//   ),
+//   market: new Keypair(),
+// };
 
 const globalInfo = {
-  marketProgram: new PublicKey("EoTcMgcDRTJVZDMZWBoU6rhYHZfkNTVEAfz3uUJRcYGj"),
-  ammProgram: new PublicKey("HWy1jotHpo6UqeQxx49dpYYdQB8wj9Qk9MdxwjLvDHB8"),
+  marketProgram: new PublicKey("srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"),
+  ammProgram: new PublicKey("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"),
   ammCreateFeeDestination: new PublicKey(
-    "3XMrhbv989VxAMi3DErLV9eJht1pHppW5LbKxe9fkEFR"
+    "7YttLkHDoNj9wyDur5pM1ejNaAvT9X4eqaYcHQqtj2G5"
   ),
-  market: new Keypair(),
+  market,
 };
 
 const confirmOptions = {
@@ -46,11 +65,13 @@ describe("amm-proxy", () => {
   console.log("market:", marketId.toString());
   it("amm anchor test!", async () => {
     let conn = anchor.getProvider().connection;
+    console.log("-----1-----");
     const { tokenA, tokenB } = await createMintPair(
       owner,
       anchor.getProvider()
     );
     // create serum market
+    console.log("-----2-----");
     const marketInfo = await createMarket({
       connection: conn,
       wallet: anchor.Wallet.local(),
@@ -65,6 +86,7 @@ describe("amm-proxy", () => {
     sleep(60000);
 
     // get serum market info
+    console.log("-----3-----");
     const market = await getMarket(
       conn,
       marketId,
@@ -72,6 +94,7 @@ describe("amm-proxy", () => {
     );
     // console.log("market info:", JSON.stringify(market));
 
+    console.log("-----4-----");
     const poolKeys = await getAssociatedPoolKeys({
       programId: globalInfo.ammProgram,
       serumProgramId: globalInfo.marketProgram,
@@ -90,10 +113,12 @@ describe("amm-proxy", () => {
     const ammTargetOrders: PublicKey = poolKeys.targetOrders;
     const ammOpenOrders: PublicKey = poolKeys.openOrders;
 
+    console.log("-----5-----");
     const [amm_config, _] = await getAmmConfigAddress(globalInfo.ammProgram);
     console.log("amm config:", amm_config.toString());
     /************************************ initialize test ***********************************************************************/
 
+    console.log("-----6-----");
     const transaction = new Transaction();
     const userCoinTokenAccount = await createAssociatedTokenAccountIfNotExist(
       owner.publicKey,
@@ -102,6 +127,7 @@ describe("amm-proxy", () => {
       anchor.getProvider().connection
     );
 
+    console.log("-----7-----");
     const userPcTokenAccount = await createAssociatedTokenAccountIfNotExist(
       owner.publicKey,
       market.quoteMint,
@@ -116,50 +142,52 @@ describe("amm-proxy", () => {
       console.log("create user lp token account txid:", txid);
     }
 
+    console.log("-----8-----");
     const userLPTokenAccount: PublicKey = await getAssociatedTokenAddress(
       poolKeys.lpMint,
       owner.publicKey
     );
 
+    console.log("-----9-----");
+
+    const accounts = {
+      ammProgram: globalInfo.ammProgram,
+      amm: ammId,
+      ammAuthority: ammAuthority,
+      ammOpenOrders: ammOpenOrders,
+      ammLpMint: lpMintAddress,
+      ammCoinMint: market.baseMintAddress,
+      ammPcMint: market.quoteMintAddress,
+      ammCoinVault: ammCoinVault,
+      ammPcVault: ammPcVault,
+      ammTargetOrders: ammTargetOrders,
+      ammConfig: amm_config,
+      createFeeDestination: globalInfo.ammCreateFeeDestination,
+      market: marketId,
+      userWallet: owner.publicKey,
+      userTokenCoin: userCoinTokenAccount,
+      userTokenPc: userPcTokenAccount,
+      userTokenLp: userLPTokenAccount,
+    };
+
     let tx = await program.methods
       .proxyInitialize(
         nonce,
-        new anchor.BN(0),
+        new anchor.BN(1725995877), //new anchor.BN(0),
         new anchor.BN(1000000000), // set as you want
-        new anchor.BN(2000000000) // set as you want
+        new anchor.BN(1000000000) // set as you want
       )
-      .accounts({
-        ammProgram: globalInfo.ammProgram,
-        amm: ammId,
-        ammAuthority: ammAuthority,
-        ammOpenOrders: ammOpenOrders,
-        ammLpMint: lpMintAddress,
-        ammCoinMint: market.baseMintAddress,
-        ammPcMint: market.quoteMintAddress,
-        ammCoinVault: ammCoinVault,
-        ammPcVault: ammPcVault,
-        ammTargetOrders: ammTargetOrders,
-        ammConfig: amm_config,
-        createFeeDestination: globalInfo.ammCreateFeeDestination,
-        marketProgram: globalInfo.marketProgram,
-        market: marketId,
-        userWallet: owner.publicKey,
-        userTokenCoin: userCoinTokenAccount,
-        userTokenPc: userPcTokenAccount,
-        userTokenLp: userLPTokenAccount,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-        sysvarRent: SYSVAR_RENT_PUBKEY,
-      })
+      .accounts(accounts)
+      .signers([owner])
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 1400000 }),
       ])
-      .rpc(confirmOptions);
+      .rpc({ preflightCommitment: "confirmed" });
     console.log("initialize tx: ", tx);
 
     /************************************ deposit test ***********************************************************************/
 
+    console.log("-----10-----");
     tx = await program.methods
       .proxyDeposit(
         new anchor.BN(1000000000), // maxCoinAmount
@@ -181,13 +209,13 @@ describe("amm-proxy", () => {
         userTokenPc: userPcTokenAccount,
         userTokenLp: userLPTokenAccount,
         userOwner: owner.publicKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc(confirmOptions);
+      .rpc();
     console.log("deposit tx: ", tx);
 
     /************************************ withdraw test ***********************************************************************/
 
+    console.log("-----11-----");
     tx = await program.methods
       .proxyWithdraw(
         new anchor.BN(10) // lpAmount
@@ -213,9 +241,8 @@ describe("amm-proxy", () => {
         marketEventQ: market.eventQueue,
         marketBids: market.bids,
         marketAsks: market.asks,
-        tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc(confirmOptions);
+      .rpc();
 
     console.log("withdraw tx: ", tx);
 
@@ -244,13 +271,13 @@ describe("amm-proxy", () => {
         userTokenSource: userCoinTokenAccount,
         userTokenDestination: userPcTokenAccount,
         userSourceOwner: owner.publicKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc(confirmOptions);
+      .rpc();
     console.log("swap_base_in tx: ", tx);
 
     /************************************ swapBaseOut test ***********************************************************************/
 
+    console.log("-----12-----");
     tx = await program.methods
       .proxySwapBaseOut(
         new anchor.BN(10000), // max_amount_in
@@ -274,9 +301,8 @@ describe("amm-proxy", () => {
         userTokenSource: userCoinTokenAccount,
         userTokenDestination: userPcTokenAccount,
         userSourceOwner: owner.publicKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc(confirmOptions);
+      .rpc();
     console.log("swap_base_out tx: ", tx);
   });
 });

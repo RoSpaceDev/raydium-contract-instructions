@@ -22,12 +22,13 @@ import {
 } from "@project-serum/serum";
 
 import {
+  InstructionType,
   Liquidity,
   Market as raydiumSerum,
   Spl,
   SPL_MINT_LAYOUT,
 } from "@raydium-io/raydium-sdk";
-import { LiquidityAssociatedPoolKeys } from "@raydium-io/raydium-sdk/src/liquidity";
+import { LiquidityAssociatedPoolKeys } from "@raydium-io/raydium-sdk";
 
 export async function getAssociatedPoolKeys({
   programId,
@@ -93,12 +94,12 @@ export async function getAssociatedPoolKeys({
     targetOrders,
     withdrawQueue,
     // market version
-    marketVersion: 4,
+    marketVersion: 4 as 3, //Rocko (It was 4)
     marketProgramId: serumProgramId,
     // market keys
     marketId,
     marketAuthority,
-  };
+  } as LiquidityAssociatedPoolKeys; //Rocko
 }
 
 export async function createAssociatedTokenAccountIfNotExist(
@@ -110,16 +111,19 @@ export async function createAssociatedTokenAccountIfNotExist(
   const associatedAccount = await Spl.getAssociatedTokenAccount({
     mint,
     owner,
+    programId: TOKEN_PROGRAM_ID, //Rocko
   });
   const payer = owner;
   const associatedAccountInfo = await conn.getAccountInfo(associatedAccount);
   if (!associatedAccountInfo) {
     transaction.add(
       Spl.makeCreateAssociatedTokenAccountInstruction({
+        programId: TOKEN_PROGRAM_ID, //Rocko
         mint,
         associatedAccount,
         owner,
         payer,
+        instructionsType: [], //Rocko
       })
     );
   }
@@ -584,7 +588,8 @@ export async function signTransactions({
   wallet: anchor.Wallet;
   connection: Connection;
 }) {
-  const blockhash = (await connection.getRecentBlockhash("max")).blockhash;
+  const blockhash = (await connection.getLatestBlockhash("finalized"))
+    .blockhash;
   transactionsAndSigners.forEach(({ transaction, signers = [] }) => {
     transaction.recentBlockhash = blockhash;
     transaction.setSigners(

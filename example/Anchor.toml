@@ -4,6 +4,9 @@
 resolution = true
 skip-lint = false
 
+[programs.localnet]
+amm_proxy = "eGMKVhWqNt6e6q2yzK2jaZdVKcy1WWL2AmFcM1oKzTE"
+
 [programs.devnet]
 amm_proxy = "eGMKVhWqNt6e6q2yzK2jaZdVKcy1WWL2AmFcM1oKzTE"
 
@@ -11,31 +14,8 @@ amm_proxy = "eGMKVhWqNt6e6q2yzK2jaZdVKcy1WWL2AmFcM1oKzTE"
 url = "https://github.com/raydium-io/raydium-contract-instructions"
 
 [provider]
-cluster = "Devnet"
+cluster = "Localnet"
 wallet = "~/.config/solana/safe-fun.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
-
-[test]
-startup_wait = 5000
-shutdown_wait = 2000
-upgradeable = false
-
-[test.validator]
-bind_address = "0.0.0.0"
-url = "https://api.devnet.solana.com"
-ledger = ".anchor/test-ledger"
-rpc_port = 8899
-
-[[test.validator.clone]]
-address = "EoTcMgcDRTJVZDMZWBoU6rhYHZfkNTVEAfz3uUJRcYGj"
-
-[[test.validator.clone]]
-address = "HWy1jotHpo6UqeQxx49dpYYdQB8wj9Qk9MdxwjLvDHB8"
-
-[[test.validator.clone]]
-address = "3XMrhbv989VxAMi3DErLV9eJht1pHppW5LbKxe9fkEFR"
-
-[[test.validator.clone]]
-address = "8QN9yfKqWDoKjvZmqFsgCzAqwZBQuzVVnC388dN5RCPo"
