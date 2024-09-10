@@ -199,7 +199,7 @@ describe("amm-proxy", () => {
         new anchor.BN(200 * 10 ** 9) // set as you want
       )
       .accounts(initAccounts)
-      .signers([owner]) //Rocko
+      .signers([owner]) //Rockooo
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 2400000 }),
       ])
