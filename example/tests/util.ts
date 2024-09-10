@@ -94,7 +94,7 @@ export async function getAssociatedPoolKeys({
     targetOrders,
     withdrawQueue,
     // market version
-    marketVersion: 4 as 3, //Rocko (It was 4)
+    marketVersion: 3, //4 as 3, //Rocko (It was 4)
     marketProgramId: serumProgramId,
     // market keys
     marketId,

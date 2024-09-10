@@ -34,28 +34,46 @@ import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 // );
 
 const market = new Keypair();
-
-// const globalInfo = {
-//   marketProgram: new PublicKey("EoTcMgcDRTJVZDMZWBoU6rhYHZfkNTVEAfz3uUJRcYGj"),
-//   ammProgram: new PublicKey("HWy1jotHpo6UqeQxx49dpYYdQB8wj9Qk9MdxwjLvDHB8"),
-//   ammCreateFeeDestination: new PublicKey(
-//     "3XMrhbv989VxAMi3DErLV9eJht1pHppW5LbKxe9fkEFR"
-//   ),
-//   market: new Keypair(),
-// };
-
 const globalInfo = {
-  marketProgram: new PublicKey("srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"),
-  ammProgram: new PublicKey("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"),
+  marketProgram: new PublicKey("EoTcMgcDRTJVZDMZWBoU6rhYHZfkNTVEAfz3uUJRcYGj"),
+  ammProgram: new PublicKey("HWy1jotHpo6UqeQxx49dpYYdQB8wj9Qk9MdxwjLvDHB8"),
   ammCreateFeeDestination: new PublicKey(
-    "7YttLkHDoNj9wyDur5pM1ejNaAvT9X4eqaYcHQqtj2G5"
+    "3XMrhbv989VxAMi3DErLV9eJht1pHppW5LbKxe9fkEFR"
   ),
   market,
 };
 
-const confirmOptions = {
-  skipPreflight: true,
-};
+// const globalInfo = {
+//   marketProgram: new PublicKey("srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"),
+//   ammProgram: new PublicKey("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"),
+//   ammCreateFeeDestination: new PublicKey(
+//     "7YttLkHDoNj9wyDur5pM1ejNaAvT9X4eqaYcHQqtj2G5"
+//   ),
+//   market,
+// };
+
+const confirmOptions = { preflightCommitment: "confirmed" };
+
+function getFutureUnixTimestamp(minutes: number): number {
+  const now = Date.now(); // Current time in milliseconds
+  const futureTime = now + minutes * 60 * 1000; // Add minutes in milliseconds
+  return Math.floor(futureTime / 1000); // Convert to Unix timestamp (seconds)
+}
+
+async function sendTx(tx: Transaction) {
+  const connection = anchor.getProvider().connection;
+  tx.recentBlockhash = (
+    await connection.getLatestBlockhash("finalized")
+  ).blockhash;
+  const txId = await anchor
+    .getProvider()
+    .connection.sendRawTransaction(tx.serialize());
+  const confirmation = await connection.confirmTransaction(txId, "confirmed");
+  if (confirmation.value.err) {
+    throw Error("ERROR");
+  }
+  return txId;
+}
 
 describe("amm-proxy", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
@@ -66,10 +84,12 @@ describe("amm-proxy", () => {
   it("amm anchor test!", async () => {
     let conn = anchor.getProvider().connection;
     console.log("-----1-----");
+
     const { tokenA, tokenB } = await createMintPair(
       owner,
       anchor.getProvider()
     );
+
     // create serum market
     console.log("-----2-----");
     const marketInfo = await createMarket({
@@ -92,7 +112,7 @@ describe("amm-proxy", () => {
       marketId,
       globalInfo.marketProgram.toString()
     );
-    // console.log("market info:", JSON.stringify(market));
+    console.log("market info:", JSON.stringify(market));
 
     console.log("-----4-----");
     const poolKeys = await getAssociatedPoolKeys({
@@ -102,7 +122,7 @@ describe("amm-proxy", () => {
       baseMint: market.baseMint,
       quoteMint: market.quoteMint,
     });
-    // console.log("amm poolKeys: ", JSON.stringify(poolKeys));
+    console.log("amm poolKeys: ", JSON.stringify(poolKeys));
 
     const ammAuthority = poolKeys.authority;
     const nonce = poolKeys.nonce;
@@ -116,7 +136,7 @@ describe("amm-proxy", () => {
     console.log("-----5-----");
     const [amm_config, _] = await getAmmConfigAddress(globalInfo.ammProgram);
     console.log("amm config:", amm_config.toString());
-    /************************************ initialize test ***********************************************************************/
+    //---- initialize test ---;
 
     console.log("-----6-----");
     const transaction = new Transaction();
@@ -135,10 +155,7 @@ describe("amm-proxy", () => {
       anchor.getProvider().connection
     );
     if (transaction.instructions.length > 0) {
-      const txid = anchor.getProvider().send(transaction, null, {
-        skipPreflight: true,
-        preflightCommitment: "confirmed",
-      });
+      const txid = await sendTx(transaction);
       console.log("create user lp token account txid:", txid);
     }
 
@@ -170,17 +187,21 @@ describe("amm-proxy", () => {
       userTokenLp: userLPTokenAccount,
     };
 
+    console.log(accounts);
+
+    const openTime = getFutureUnixTimestamp(1);
+    console.log("OWNER", owner.publicKey.toBase58(), "OT", openTime);
     let tx = await program.methods
       .proxyInitialize(
         nonce,
-        new anchor.BN(1725995877), //new anchor.BN(0),
-        new anchor.BN(1000000000), // set as you want
-        new anchor.BN(1000000000) // set as you want
+        new anchor.BN(openTime), //Tue Sep 10 2024 20:24:37 GMT+0000//new anchor.BN(0),
+        new anchor.BN(100 * 10 ** 9), // set as you want
+        new anchor.BN(200 * 10 ** 9) // set as you want
       )
       .accounts(accounts)
-      .signers([owner])
+      .signers([owner]) //Rocko
       .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 1400000 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 2400000 }),
       ])
       .rpc({ preflightCommitment: "confirmed" });
     console.log("initialize tx: ", tx);
@@ -310,7 +331,7 @@ describe("amm-proxy", () => {
 export async function getAmmConfigAddress(
   programId: PublicKey
 ): Promise<[PublicKey, number]> {
-  const [address, bump] = await PublicKey.findProgramAddress(
+  const [address, bump] = anchor.web3.PublicKey.findProgramAddressSync(
     [Buffer.from(anchor.utils.bytes.utf8.encode("amm_config_account_seed"))],
     programId
   );
