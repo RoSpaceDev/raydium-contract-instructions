@@ -12,7 +12,7 @@ keywords = ["solana", "raydium", "amm", "anchor"]
 devnet = []
 
 [dependencies]
+solana-program="=1.18.23"
 anchor-lang = {version = "0.30.1",features = ["init-if-needed"] }
 anchor-spl={ version = "0.30.1", features = ["metadata"] }
 raydium-contract-instructions = { path = "../lib" }
-solana-program="=1.18.23"

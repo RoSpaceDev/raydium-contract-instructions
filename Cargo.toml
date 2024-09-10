@@ -3,6 +3,7 @@ members = [
     "lib",
     "amm-anchor"
 ]
+resolver = "2"
 
 [profile.release]
 overflow-checks = true

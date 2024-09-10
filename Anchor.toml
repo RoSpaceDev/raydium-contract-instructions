@@ -7,8 +7,8 @@ members = [
 ]
 
 [provider]
-cluster = "localnet"
-wallet = "~/.config/solana/id.json"
+cluster = "Devnet"
+wallet = "~/.config/solana/safe-fun.json"
 
 [programs.mainnet]
 amm = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"

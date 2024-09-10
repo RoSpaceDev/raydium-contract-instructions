@@ -11,8 +11,8 @@ amm_proxy = "eGMKVhWqNt6e6q2yzK2jaZdVKcy1WWL2AmFcM1oKzTE"
 url = "https://github.com/raydium-io/raydium-contract-instructions"
 
 [provider]
-cluster = "Localnet"
-wallet = "~/.config/solana/id.json"
+cluster = "Devnet"
+wallet = "~/.config/solana/safe-fun.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
