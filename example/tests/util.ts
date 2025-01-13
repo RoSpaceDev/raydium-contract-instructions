@@ -381,6 +381,10 @@ export async function createMintPair(
   return { tokenA, tokenB };
 }
 
+export async function getMarketPdaSize(dexProgram: PublicKey) {
+  return Market.getLayout(dexProgram);
+}
+
 export async function createMarket({
   connection,
   wallet,

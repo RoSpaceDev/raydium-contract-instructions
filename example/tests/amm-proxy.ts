@@ -20,6 +20,7 @@ import {
   getAssociatedPoolKeys,
   getMarket,
   sleep,
+  getMarketPdaSize,
 } from "./util";
 
 import { AmmProxy } from "../target/types/amm_proxy";
@@ -51,6 +52,8 @@ const globalInfo = {
 //   ),
 //   market,
 // };
+
+console.log(getMarketPdaSize(globalInfo.marketProgram));
 
 const confirmOptions = { preflightCommitment: "confirmed" };
 
@@ -187,7 +190,7 @@ describe("amm-proxy", () => {
       userTokenLp: userLPTokenAccount,
     };
 
-    console.log(initAccounts);
+    console.log(nonce, initAccounts);
 
     const openTime = getFutureUnixTimestamp(1);
 
@@ -207,7 +210,6 @@ describe("amm-proxy", () => {
     console.log("initialize tx: ", tx);
 
     /************************************ deposit test ***********************************************************************/
-
     console.log("-----10-----");
     tx = await program.methods
       .proxyDeposit(
